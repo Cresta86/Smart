@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Strumento personale per il riepilogo locale di orari e timbrature.">
+    <meta name="referrer" content="no-referrer">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#0b0e13">
+    <title>Timbrature · Portale Orari</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230f766e'/%3E%3Ccircle cx='16' cy='16' r='8.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3Cpath d='M16 11.5V16l3 2' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        window.GEMINI_PROXY_URL = "";
+        (function () {
+            var theme = 'dark';
+            try { theme = localStorage.getItem('theme') || 'dark'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+        })();
+    </script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ================= TOP BAR ================= -->
+    <nav class="navbar" aria-label="Navigazione principale">
+        <div class="navbar-inner">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+                <div>
+                    <h1 class="brand-name">Timbrature</h1>
+                    <div class="brand-sub">Portale orari personale</div>
+                </div>
+            </div>
+
+            <div class="month-switch" role="group" aria-label="Selezione mese">
+                <button type="button" id="prevMonthBtn" class="icon-button" aria-label="Mese precedente" title="Mese precedente (←)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m15 18-6-6 6-6"/></svg></button>
+                <h2 id="currentMonthYear" aria-live="polite"></h2>
+                <button type="button" id="nextMonthBtn" class="icon-button" aria-label="Mese successivo" title="Mese successivo (→)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 18 6-6-6-6"/></svg></button>
+                <button type="button" id="goTodayBtn" class="today-btn" title="Torna al mese corrente (T)">Oggi</button>
+            </div>
+
+            <div class="nav-actions">
+                <button type="button" id="themeToggle" class="icon-button" title="Cambia tema" aria-label="Attiva tema chiaro">
+                    <svg id="sunIcon" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+                <div class="menu-wrap">
+                    <button type="button" id="actionsMenuBtn" class="btn btn-outline" aria-haspopup="true" aria-expanded="false" aria-controls="actionsMenu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span class="btn-label">Azioni</span>
+                    </button>
+                    <div id="actionsMenu" class="menu hidden">
+                        <div class="menu-section">
+                            <div class="menu-title eyebrow">Impostazioni</div>
+                            <button type="button" id="menuSmartSettingsBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg></span><span class="mi-text">Smart working<span class="mi-sub">Giorni predefiniti</span></span>
+                            </button>
+                            <button type="button" id="menuExtraSettingsBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span><span class="mi-text">Minuti extra<span class="mi-sub">Permessi di uscita o straordinario</span></span>
+                            </button>
+                            <button type="button" id="menuHolidaySettingsBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg></span><span class="mi-text">Festività<span class="mi-sub">Nazionali e santo patrono</span></span>
+                            </button>
+                            <button type="button" id="menuGeminiSettingsBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="M19 3v4M17 5h4"/></svg></span><span class="mi-text">Servizio AI<span class="mi-sub">Configura Gemini</span></span>
+                            </button>
+                        </div>
+                        <div class="menu-section">
+                            <div class="menu-title eyebrow">Dati</div>
+                            <button type="button" id="menuImportBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span><span class="mi-text">Importa da immagine<span class="mi-sub">Bozza da verificare</span></span>
+                            </button>
+                            <button type="button" id="menuExportBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg></span><span class="mi-text">Riepilogo mensile<span class="mi-sub">Anteprima ed export CSV</span></span>
+                            </button>
+                            <button type="button" id="menuBackupBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></span><span class="mi-text">Backup completo<span class="mi-sub">Tutti i mesi in un file</span></span>
+                            </button>
+                            <button type="button" id="menuRestoreBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></span><span class="mi-text">Ripristina backup<span class="mi-sub">Da un file salvato in precedenza</span></span>
+                            </button>
+                            <button type="button" id="menuHelpBtn" class="menu-item">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5Z"/><path d="M4 19.5V21h16"/></svg></span><span class="mi-text">Scarica istruzioni</span>
+                            </button>
+                        </div>
+                        <div class="menu-section">
+                            <button type="button" id="menuClearMonthBtn" class="menu-item danger">
+                                <span class="mi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></span><span class="mi-text">Svuota mese</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="mainApp">
+
+        <!-- ================= OVERVIEW ================= -->
+        <section class="overview" aria-label="Riepilogo del mese">
+            <div class="card kpi-card glow-card tone-accent">
+                <div class="kpi-top">
+                    <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>Bilancio mensile</div>
+                </div>
+                <span id="summaryFinalExtra" class="kpi-value glass-number">0</span>
+                <span class="kpi-caption">Residuo dei minuti extra nel bilancio</span>
+                <div class="kpi-meta">
+                    <span class="pill pill-neg"><span class="dot"></span>Debito <span id="summaryFinalDebt" class="num">0</span></span>
+                </div>
+                <div class="sparkline-container spark-accent" id="spark1" aria-hidden="true"></div>
+            </div>
+
+            <div class="card kpi-card glow-card tone-warn">
+                <div class="kpi-top">
+                    <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg></span>Da giustificare</div>
+                </div>
+                <span id="summaryAbsencesToJustify" class="kpi-value glass-number">0</span>
+                <span class="kpi-caption">Minuti da gestire nel sistema ufficiale</span>
+                <div class="kpi-meta"><span class="pill pill-warn">Azione richiesta</span></div>
+                <div class="sparkline-container spark-warn" id="spark2" aria-hidden="true"></div>
+            </div>
+
+            <div class="card kpi-card glow-card tone-info">
+                <div class="kpi-top">
+                    <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span><span id="summaryCreditLabel">Straordinario</span></div>
+                </div>
+                <span id="summaryExtraToPermit" class="kpi-value glass-number">0</span>
+                <span id="summaryCreditCaption" class="kpi-caption">Prestazioni autorizzate del mese</span>
+                <div class="sparkline-container spark-info" id="spark3" aria-hidden="true"></div>
+            </div>
+        </section>
+
+        <section class="stats" aria-label="Contatori del mese">
+            <div class="card stat" style="--c: var(--t-smart)">
+                <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg></span>
+                <div class="stat-body"><span class="stat-label">Smart working</span><span id="summarySmartWorkingDays" class="stat-value">0</span></div>
+            </div>
+            <div class="card stat" style="--c: var(--t-ferie)">
+                <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 12a10 10 0 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/><path d="M12 2v1"/></svg></span>
+                <div class="stat-body"><span class="stat-label">Ferie</span><span id="summaryHolidayDays" class="stat-value">0</span></div>
+            </div>
+            <div class="card stat" style="--c: var(--t-trasferta)">
+                <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
+                <div class="stat-body"><span class="stat-label">Trasferte</span><span id="summaryBusinessTripDays" class="stat-value">0</span></div>
+            </div>
+            <div class="card stat" style="--c: var(--info)">
+                <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg></span>
+                <div class="stat-body"><span class="stat-label">Permessi</span><span class="stat-value split"><span id="summaryPermitsTwoHoursUsed">0</span><span id="summaryPermitsThreeHoursUsed">0</span></span></div>
+            </div>
+            <div class="card stat" style="--c: var(--t-par)">
+                <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2M6 11v2M10 11v2"/></svg></span>
+                <div class="stat-body"><span class="stat-label">PAR</span><span id="summaryParHoursUsed" class="stat-value">0</span></div>
+            </div>
+            <div class="card stat" style="--c: var(--t-malattia)">
+                <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.2 12h4.3l1.5-3 3 6 1.5-3h7.3"/></svg></span>
+                <div class="stat-body"><span class="stat-label">Malattia</span><span id="summarySickDays" class="stat-value">0</span></div>
+            </div>
+        </section>
+
+        <!-- ================= SETTINGS PANELS ================= -->
+        <section id="appSettingsSection" class="card panel hidden" aria-labelledby="smartSettingsTitle">
+            <div class="panel-head">
+                <div>
+                    <h3 id="smartSettingsTitle" class="panel-title">Smart working</h3>
+                    <p class="panel-desc">Giorni settimanali già concordati e caricati in SAP. Le variazioni richiedono di norma 48 ore di preavviso.</p>
+                </div>
+                <button type="button" class="icon-button" data-close-panel="appSettingsSection" aria-label="Chiudi impostazioni smart working"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="panel-body">
+                <div id="smartWorkingCheckboxes"></div>
+            </div>
+            <div class="panel-foot">
+                <div id="appSettingsFeedback" class="panel-feedback" role="status" aria-live="polite"></div>
+                <button type="button" id="saveAppSettingsBtn" class="btn btn-primary">Salva impostazioni</button>
+            </div>
+        </section>
+
+        <section id="extraSettingsSection" class="card panel hidden" aria-labelledby="extraSettingsTitle">
+            <div class="panel-head">
+                <div>
+                    <h3 id="extraSettingsTitle" class="panel-title">Destinazione dei minuti extra</h3>
+                    <p class="panel-desc">La scelta vale per tutto il mese selezionato e non riclassifica i mesi già chiusi.</p>
+                </div>
+                <button type="button" class="icon-button" data-close-panel="extraSettingsSection" aria-label="Chiudi destinazione minuti extra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="panel-body">
+                <div class="option-grid">
+                    <label class="option-card">
+                        <input type="radio" id="extraDestPermesso" name="extraDestination" value="permesso" checked>
+                        <span>
+                            <span class="option-title">Minuti extra per permessi di uscita</span>
+                            <span class="option-desc">Accantona automaticamente i blocchi completi da 15 minuti per future uscite.</span>
+                        </span>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" id="extraDestStraordinario" name="extraDestination" value="straordinario">
+                        <span>
+                            <span class="option-title">Straordinario</span>
+                            <span class="option-desc">Conteggia come straordinario solo le prestazioni autorizzate e ammesse.</span>
+                        </span>
+                    </label>
+                </div>
+                <p class="hint mt-3">Il contatore per le uscite è uno strumento personale: non crea una banca ore ufficiale e non sostituisce autorizzazioni, causali o registrazioni aziendali.</p>
+            </div>
+            <div class="panel-foot">
+                <div id="extraSettingsFeedback" class="panel-feedback" role="status" aria-live="polite"></div>
+                <button type="button" id="saveExtraSettingsBtn" class="btn btn-primary">Salva scelta</button>
+            </div>
+        </section>
+
+        <section id="holidaySettingsSection" class="card panel hidden" aria-labelledby="holidaySettingsTitle">
+            <div class="panel-head">
+                <div>
+                    <h3 id="holidaySettingsTitle" class="panel-title">Festività</h3>
+                    <p class="panel-desc">Le festività nazionali che cadono in un giorno feriale vengono impostate automaticamente come «Festivo». Le giornate che hai già compilato non vengono modificate.</p>
+                </div>
+                <button type="button" class="icon-button" data-close-panel="holidaySettingsSection" aria-label="Chiudi festività"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="panel-body">
+                <label class="check-row">
+                    <input type="checkbox" id="holidaysEnabled" checked>
+                    <span><strong>Riconosci automaticamente le festività nazionali</strong><small>Capodanno, Epifania, Pasqua e Pasquetta, 25 aprile, 1° maggio, 2 giugno, Ferragosto, San Francesco (dal 2026), Ognissanti, Immacolata, Natale e Santo Stefano.</small></span>
+                </label>
+                <div class="grid-2 mt-4">
+                    <div>
+                        <label for="holidayPatronDate" class="field-label">Santo patrono (gg/mm)</label>
+                        <input id="holidayPatronDate" type="text" inputmode="numeric" maxlength="5" placeholder="es. 03/11" autocomplete="off">
+                    </div>
+                    <div>
+                        <label for="holidayPatronName" class="field-label">Nome <span class="hint">(facoltativo)</span></label>
+                        <input id="holidayPatronName" type="text" maxlength="40" placeholder="es. San Giusto" autocomplete="off">
+                    </div>
+                </div>
+                <div class="sub-box">
+                    <div class="row-between"><span class="option-title" id="holidayPreviewTitle">Festività dell’anno</span></div>
+                    <ul id="holidayPreview" class="holiday-list"></ul>
+                </div>
+            </div>
+            <div class="panel-foot">
+                <div id="holidaySettingsFeedback" class="panel-feedback" role="status" aria-live="polite"></div>
+                <button type="button" id="saveHolidaySettingsBtn" class="btn btn-primary">Salva festività</button>
+            </div>
+        </section>
+
+        <section id="geminiSettingsSection" class="card panel hidden" aria-labelledby="geminiSettingsTitle">
+            <div class="panel-head">
+                <div>
+                    <h3 id="geminiSettingsTitle" class="panel-title">Servizio di importazione AI</h3>
+                    <p class="panel-desc">Per un sito pubblicato è preferibile il Worker: la chiave resta lato server.</p>
+                </div>
+                <button type="button" class="icon-button" data-close-panel="geminiSettingsSection" aria-label="Chiudi servizio AI"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="panel-body">
+                <div class="row-between" style="flex-wrap: wrap;">
+                    <div>
+                        <div class="option-title">Inserimento manuale della chiave</div>
+                        <p class="hint mt-1">Disponibile solo con il codice di sicurezza. La modalità manuale usa la chiave direttamente dal browser.</p>
+                    </div>
+                    <button type="button" id="openManualGeminiKeyBtn" class="btn btn-outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Apri con codice</button>
+                </div>
+                <div id="manualGeminiKeyGate" class="sub-box hidden">
+                    <label for="manualGeminiAccessCodeInput" class="field-label">Codice di sicurezza</label>
+                    <div class="row">
+                        <input id="manualGeminiAccessCodeInput" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="Codice a 6 cifre">
+                        <button type="button" id="unlockManualGeminiKeyBtn" class="btn btn-primary">Sblocca</button>
+                    </div>
+                    <p id="manualGeminiGateFeedback" class="mt-2 text-xs" role="status" aria-live="polite"></p>
+                </div>
+                <div id="manualGeminiKeyPanel" class="sub-box warn hidden">
+                    <label for="manualGeminiApiKeyInput" class="field-label">Chiave API Gemini</label>
+                    <input id="manualGeminiApiKeyInput" type="password" autocomplete="new-password" spellcheck="false" placeholder="Incolla qui la chiave Gemini">
+                    <p class="hint mt-2">La chiave viene salvata solo nel browser corrente e resta leggibile da chi accede al profilo. Non inserirla in file pubblici e non condividerla.</p>
+                    <div class="row-end mt-4">
+                        <button type="button" id="hideManualGeminiKeyBtn" class="btn btn-ghost">Nascondi</button>
+                        <button type="button" id="clearManualGeminiKeyBtn" class="btn btn-outline">Rimuovi chiave</button>
+                        <button type="button" id="saveManualGeminiKeyBtn" class="btn btn-primary">Salva chiave</button>
+                    </div>
+                    <p id="manualGeminiKeyFeedback" class="mt-3 text-sm text-center" role="status" aria-live="polite"></p>
+                </div>
+            </div>
+        </section>
+
+        <div id="bankableDebtDecisionBanner" class="callout warn hidden">
+            <span class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg></span>
+            <div class="callout-body">
+                <h3 class="callout-title">Debito e minuti accantonati</h3>
+                <p id="bankableDebtDecisionText" class="callout-text"></p>
+            </div>
+            <div class="row" style="flex-wrap: wrap;">
+                <button type="button" id="keepBankableForLaterBtn" class="btn btn-outline">Copri più avanti</button>
+                <button type="button" id="useBankableForDebtBtn" class="btn btn-primary">Usa crediti</button>
+            </div>
+        </div>
+
+        <!-- ================= CALENDAR ================= -->
+        <section class="card calendar-card" aria-label="Calendario del mese">
+            <div class="calendar-toolbar">
+                <div>
+                    <h3 class="section-title">Calendario</h3>
+                    <p class="hint">Seleziona un giorno per registrare timbrature e causali.</p>
+                </div>
+                <div class="legend" aria-hidden="true">
+                    <span class="legend-item" style="--c: var(--t-ufficio)"><i></i>Ufficio</span>
+                    <span class="legend-item" style="--c: var(--t-smart)"><i></i>Smart</span>
+                    <span class="legend-item" style="--c: var(--t-trasferta)"><i></i>Trasferta</span>
+                    <span class="legend-item" style="--c: var(--t-ferie)"><i></i>Ferie</span>
+                    <span class="legend-item" style="--c: var(--t-par)"><i></i>PAR</span>
+                    <span class="legend-item" style="--c: var(--t-malattia)"><i></i>Malattia</span>
+                    <span class="legend-item" style="--c: var(--t-festivo)"><i></i>Festivo</span>
+                    <span class="legend-heat"><i></i>Saldo − / +</span>
+                </div>
+            </div>
+            <div id="calendar" class="calendar-grid"></div>
+        </section>
+
+        <footer class="app-footer" role="note">
+            <span class="foot-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span><strong class="text-primary-navy">Dati locali.</strong> Le informazioni restano solo in questo browser e non sostituiscono il sistema aziendale ufficiale.</span></span>
+            <span class="foot-right">
+                <span class="shortcuts"><kbd>←</kbd><kbd>→</kbd> mesi <kbd>T</kbd> oggi</span>
+                <span id="appVersionBadge" title="Serve a verificare che il sito online sia aggiornato">Versione 2026.11.23.5</span>
+            </span>
+        </footer>
+    </main>
+
+    <input type="file" id="backupFileInput" class="hidden" accept="application/json,.json" aria-label="Scegli il file di backup">
+    <div id="appToast" class="app-toast" role="status" aria-live="polite"></div>
+    <input type="file" id="imageUploader" class="hidden" accept="image/png,image/jpeg,image/webp" aria-label="Scegli immagine delle timbrature">
+
+    <!-- ================= GESTIONE GIORNATA (sheet) ================= -->
+    <div id="entryModal" class="modal sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content" tabindex="-1">
+            <div class="sheet-header">
+                <div>
+                    <div class="eyebrow">Gestione giornata</div>
+                    <h4 id="modalTitle">Gestione Giornata</h4>
+                </div>
+                <button type="button" id="closeModalBtn" class="icon-button" aria-label="Chiudi gestione giornata"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+
+            <div class="sheet-body">
+                <div id="modalFeedback" class="feedback-message hidden" role="status" aria-live="polite"></div>
+
+                <form id="timeEntryForm">
+                    <input type="hidden" id="selectedDate">
+
+                    <div class="day-type-wrap">
+                        <label for="dayType" class="field-label">Tipo di giornata</label>
+                        <span class="day-type-dot" id="dayTypeDot" aria-hidden="true"></span>
+                        <select id="dayType" name="dayType">
+                            <option value="ufficio">Ufficio</option>
+                            <option value="smart">Smart working</option>
+                            <option value="trasferta">Trasferta</option>
+                            <option value="ferie">Ferie</option>
+                            <option value="par">PAR</option>
+                            <option value="malattia">Malattia</option>
+                            <option value="infortunio">Infortunio</option>
+                            <option value="maternita">Maternità</option>
+                            <option value="congedo_parentale">Congedo parentale</option>
+                            <option value="weekend">Non lavorativo</option>
+                            <option value="festivo">Festivo</option>
+                            <option value="lavoro_festivo">Lavoro in giorno festivo</option>
+                        </select>
+                    </div>
+
+                    <div id="workdayControls">
+                        <!-- Orari -->
+                        <div class="group">
+                            <div class="group-head">
+                                <span class="group-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                                <div>
+                                    <div class="group-title">Orari e turni</div>
+                                    <div class="group-sub">Ogni ingresso e uscita deve corrispondere a una timbratura.</div>
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div>
+                                    <label for="entryTime" class="field-label">Entrata</label>
+                                    <input type="time" id="entryTime" name="entryTime">
+                                </div>
+                                <div>
+                                    <label for="exitTime" class="field-label">Uscita</label>
+                                    <input type="time" id="exitTime" name="exitTime">
+                                </div>
+                            </div>
+                            <div class="row-between wrap-mobile mt-2">
+                                <p id="workTimeRuleHint" class="hint">Orario ordinario: 08:00-16:45, con 8 ore di lavoro e 45 minuti di pausa.</p>
+                                <span class="row" style="gap:.4rem; flex-shrink:0;">
+                                    <span id="suggestedExitTime" class="hint num"></span>
+                                    <button type="button" id="suggestExitTimeBtn" class="link-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m15 4 5 5M3 21l12-12M9 3v2M3 9h2M19 13v2M17 15h2"/></svg>Calcola uscita 8h</button>
+                                </span>
+                            </div>
+
+                            <div id="lunchBreakSection">
+                                <hr class="divider">
+                                <div class="grid-2">
+                                    <div class="span-2">
+                                        <label for="lunchShiftSelect" class="field-label">Pausa pranzo</label>
+                                        <select id="lunchShiftSelect" name="lunchShiftSelect">
+                                            <option value="13:30-14:15">Standard · 13:30 – 14:15</option>
+                                            <option value="12:00-12:45">Turno 1 · 12:00 – 12:45</option>
+                                            <option value="13:00-13:45">Turno 2 · 13:00 – 13:45</option>
+                                            <option value="12:30-13:15">Turno 3 · 12:30 – 13:15</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="lunchStartTime" class="field-label">Uscita mensa</label>
+                                        <input type="time" id="lunchStartTime" name="lunchStartTime">
+                                    </div>
+                                    <div>
+                                        <label for="lunchEndTime" class="field-label">Rientro mensa</label>
+                                        <input type="time" id="lunchEndTime" name="lunchEndTime">
+                                        <p id="lunchDelayHint" class="text-xs text-yellow-600 mt-1 hidden"></p>
+                                    </div>
+                                    <div class="span-2">
+                                        <label for="lunchChangeReason" class="field-label">Motivo spostamento fascia mensa</label>
+                                        <select id="lunchChangeReason">
+                                            <option value="none">Nessuno (fascia rispettata)</option>
+                                            <option value="riunione">Riunione</option>
+                                            <option value="formazione">Corso di formazione</option>
+                                            <option value="ente_esterno">Riunione/attività con ente esterno</option>
+                                            <option value="audit">Audit in corso</option>
+                                        </select>
+                                        <p class="hint mt-1">Lo spostamento è ammesso solo per queste attività e sempre entro 45 minuti.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Permessi -->
+                        <div id="absenceManagementSection" class="group">
+                            <div class="group-head">
+                                <span class="group-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg></span>
+                                <div>
+                                    <div class="group-title">Permessi ed eccezioni</div>
+                                    <div class="group-sub">Recuperi, assenze a ore e lavoro esterno della giornata.</div>
+                                </div>
+                            </div>
+
+                            <div class="grid-2 stack-mobile">
+                                <div class="sub-card">
+                                    <div class="sub-card-title">Permessi a recupero</div>
+                                    <p id="permitProfileHint" class="hint mb-2">Mensile: 3 da 2 ore, 1 da 3 ore.</p>
+                                    <div class="chip-grid cols-3">
+                                        <button type="button" class="chip" data-permit-preset="none">Nessuno</button>
+                                        <button type="button" class="chip" data-permit-preset="due_ore">2 ore</button>
+                                        <button type="button" class="chip" data-permit-preset="tre_ore" id="longPermitPresetBtn">3 ore</button>
+                                    </div>
+                                    <select id="permitType" class="hidden" aria-hidden="true" tabindex="-1">
+                                        <option value="none">Nessun permesso ROL</option>
+                                        <option value="due_ore" id="permitTypeTwoHours">2 ore da recuperare</option>
+                                        <option value="tre_ore" id="permitTypeThreeHours">3 ore da recuperare</option>
+                                    </select>
+                                    <p id="permitAllowanceHint" class="hint mt-2"></p>
+                                    <input type="hidden" id="permitMinutesUsed">
+                                </div>
+
+                                <div class="sub-card">
+                                    <div class="sub-card-title">Ferie / PAR a ore</div>
+                                    <p id="partialAbsenceRuleHint" class="hint mb-2">Ferie: minimo 30 minuti, poi multipli di 15.</p>
+                                    <div class="row">
+                                        <label for="partialHolidayMinutes" class="sr-only">Minuti di ferie o PAR</label>
+                                        <input type="number" id="partialHolidayMinutes" placeholder="Minuti" step="15" min="0" style="flex: 1.4;">
+                                        <label for="partialAbsenceType" class="sr-only">Tipo di assenza a ore</label>
+                                        <select id="partialAbsenceType" style="flex: 1;">
+                                            <option value="ferie">Ferie</option>
+                                            <option value="par">PAR</option>
+                                        </select>
+                                    </div>
+                                    <div class="chip-grid cols-5 mt-2">
+                                        <button type="button" class="chip" data-partial-mins="30">30</button>
+                                        <button type="button" class="chip" data-partial-mins="45">45</button>
+                                        <button type="button" class="chip" data-partial-mins="60">60</button>
+                                        <button type="button" class="chip" data-partial-mins="120">120</button>
+                                        <button type="button" class="chip chip-muted" data-partial-mins="0" aria-label="Azzera minuti">0</button>
+                                    </div>
+                                    <input type="hidden" id="parHours">
+                                </div>
+                            </div>
+
+                            <div class="sub-card mt-3">
+                                <select id="interimAbsenceType" class="hidden" style="display:none !important;" aria-hidden="true" tabindex="-1">
+                                    <option value="trasferta">Trasferta parziale / servizio</option>
+                                    <option value="visita_medica">Visita medica</option>
+                                    <option value="fisioterapia">Fisioterapia / medicazione / estrazione</option>
+                                    <option value="malattia">Malattia</option>
+                                    <option value="infortunio">Infortunio</option>
+                                    <option value="maternita">Maternità</option>
+                                    <option value="permesso_retribuito">Altro permesso retribuito autorizzato</option>
+                                </select>
+                                <p id="interimAbsenceLabel" class="sub-card-title mb-2">Assenza o lavoro esterno a ore</p>
+                                <div class="grid-2">
+                                    <div>
+                                        <label for="interimAbsenceStart" class="field-label">Inizio</label>
+                                        <input type="time" id="interimAbsenceStart">
+                                    </div>
+                                    <div>
+                                        <label for="interimAbsenceEnd" class="field-label">Fine</label>
+                                        <input type="time" id="interimAbsenceEnd">
+                                    </div>
+                                </div>
+                                <div id="interimAbsenceTypeContainer" class="mt-3">
+                                    <div class="chip-row">
+                                        <button type="button" class="chip" data-interim-type="trasferta">Trasferta</button>
+                                        <button type="button" class="chip" data-interim-type="visita_medica">Visita</button>
+                                        <button type="button" class="chip" data-interim-type="fisioterapia">Fisioterapia</button>
+                                        <button type="button" class="chip" data-interim-type="malattia">Malattia</button>
+                                        <button type="button" class="chip" data-interim-type="infortunio">Infortunio</button>
+                                        <button type="button" class="chip" data-interim-type="maternita">Maternità</button>
+                                        <button type="button" class="chip" data-interim-type="permesso_retribuito">Altro retribuito</button>
+                                        <button type="button" class="chip chip-muted" id="clearInterimAbsenceBtn">Cancella orari</button>
+                                    </div>
+                                    <p id="calculatedAbsenceDuration" class="text-xs text-yellow-600 font-bold mt-2"></p>
+                                    <p id="interimAbsenceRuleHint" class="hint mt-1">Gli orari saranno arrotondati: inizio al quarto d’ora precedente, fine al successivo.</p>
+                                    <label id="absenceDocumentedLabel" class="check-row hidden mt-3">
+                                        <input type="checkbox" id="absenceDocumented">
+                                        <span><strong>Certificazione disponibile</strong><small>Dispongo della certificazione con effettuazione e durata della prestazione.</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="earlyExitCalculator" class="callout warn mt-3 hidden">
+                                <span class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 22h14M5 2h14M17 22v-4.17a2 2 0 0 0-.59-1.42L12 12l-4.41 4.41A2 2 0 0 0 7 17.83V22M7 2v4.17a2 2 0 0 0 .59 1.42L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2"/></svg></span>
+                                <div style="flex:1; min-width:0;">
+                                    <p class="callout-text" id="earlyExitMessage" style="margin-top:0;">
+                                        Debito orario rilevato. Mancano <strong id="minutesToCover">0</strong> min.
+                                    </p>
+                                    <div class="row mt-2" id="earlyExitApplyContainer" style="flex-wrap: wrap;">
+                                        <label for="applyTypeSelect" class="sr-only">Tipo di copertura</label>
+                                        <select id="applyTypeSelect" style="flex:1; min-width: 160px;">
+                                            <option value="ferie">Usa ferie</option>
+                                            <option value="par">Usa PAR</option>
+                                            <option value="permesso_generic">Permesso a recupero (2h)</option>
+                                        </select>
+                                        <button type="button" id="applyEarlyExitBtn" class="btn btn-primary">Applica</button>
+                                        <button type="button" id="openEarlyExitOptionsBtn" class="btn btn-outline">Altre opzioni</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="extraWorkAuthorizationSection" class="mt-3">
+                            <label class="check-row">
+                                <input type="checkbox" id="extraWorkAuthorized">
+                                <span><strong>Prestazione straordinaria/non lavorativa autorizzata</strong><small>La richiesta deve essere preventiva. Lo straordinario deve durare almeno 30 minuti; nei giorni non lavorativi serve anche l’autorizzazione all’accesso.</small></span>
+                            </label>
+                            <p id="overtimeEligibilityHint" class="hint mt-2"></p>
+                        </div>
+
+                        <div id="smartComplianceSection" class="mt-3 hidden">
+                            <label class="check-row">
+                                <input type="checkbox" id="smartPlannedApproved">
+                                <span><strong>Giornata concordata e inserita in SAP</strong><small>Piano mensile: 10 giorni di anticipo. Variazioni: di norma 48 ore. La prestazione deve rimanere tra le 08:00 e le 19:00.</small></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="fullDayTripControls" class="group hidden mt-3">
+                        <div class="group-head">
+                            <span class="group-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
+                            <div class="group-title">Dettagli trasferta</div>
+                        </div>
+                        <div class="grid-2">
+                            <div>
+                                <label for="fullDayTripStartTime" class="field-label">Inizio</label>
+                                <input type="time" id="fullDayTripStartTime">
+                            </div>
+                            <div>
+                                <label for="fullDayTripEndTime" class="field-label">Fine</label>
+                                <input type="time" id="fullDayTripEndTime">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label for="notes" class="field-label">Note</label>
+                        <textarea id="notes" name="notes" rows="2" placeholder="Aggiungi dettagli…"></textarea>
+                    </div>
+
+                    <div id="dailyCalculations" class="result-card">
+                        <div>
+                            <span class="eyebrow">Saldo giornaliero</span>
+                            <span id="modalDailyBalance" class="font-bold text-lg">0h 0m</span>
+                        </div>
+                        <div>
+                            <span class="eyebrow">Esito provvisorio</span>
+                            <span id="modalDailyFinalBalance" class="font-bold text-lg">0h 0m</span>
+                        </div>
+                    </div>
+                    <div id="dailyEventsSummary"></div>
+
+                    <div id="extraDelayCoverageContainer" class="callout accent mt-3 hidden">
+                        <span class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span>
+                        <div style="flex:1; min-width:0;">
+                            <label for="extraDelayCoverageInput" class="callout-title" style="display:block; margin-bottom:.5rem;">Minuti extra accumulati</label>
+                            <select id="extraDelayCoverageInput" class="input-field">
+                                <option value="none">Non usare extra accumulati</option>
+                                <option value="all">Copri il ritardo con gli extra del mese, anche successivi</option>
+                            </select>
+                            <span id="extraDelayCoverageHint" class="hint" style="display:block; margin-top:.5rem;"></span>
+                        </div>
+                    </div>
+
+                    <div id="coverDebtWithBankContainer" class="callout mt-3 hidden">
+                        <span class="callout-icon" style="background: var(--surface-3); color: var(--text-2);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v18M7 21h10M5 7h14"/><path d="m5 7-3 7a3.5 3.5 0 0 0 6 0Zm14 0-3 7a3.5 3.5 0 0 0 6 0Z"/></svg></span>
+                        <div style="flex:1; min-width:0;">
+                            <label for="coverDebtWithBankInput" class="callout-title" style="display:block; margin-bottom:.5rem;">Copertura debito</label>
+                            <select id="coverDebtWithBankInput" class="input-field">
+                                <option value="none">Non coprire ora</option>
+                                <option value="extra">Usa minuti extra</option>
+                                <option value="banca">Usa minuti accantonati per uscite</option>
+                            </select>
+                            <span id="coverDebtWithBankHint" class="hint" style="display:block; margin-top:.5rem;"></span>
+                        </div>
+                    </div>
+
+                    <div class="sheet-footer">
+                        <button type="button" id="deleteDayDataBtn" class="btn btn-danger-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Ripristina giorno</button>
+                        <button type="submit" class="btn btn-primary btn-lg glass-primary" id="mainSaveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>Salva modifiche</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CONFERMA ================= -->
+    <div id="confirmationModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmationTitle">
+        <div class="modal-content narrow text-center" tabindex="-1">
+            <div class="dialog-icon neg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+            <h4 id="confirmationTitle" class="dialog-title">Conferma azione</h4>
+            <p id="confirmationMessage" class="text-secondary mt-2">Sei sicuro?</p>
+            <div class="dialog-foot center">
+                <button type="button" id="cancelConfirmBtn" class="btn btn-outline">Annulla</button>
+                <button type="button" id="confirmBtn" class="btn btn-danger">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= DEBITO ORARIO ================= -->
+    <div id="earlyExitPromptModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="earlyExitPromptTitle" style="z-index: 110;">
+        <div class="modal-content narrow text-center" tabindex="-1">
+            <div class="dialog-icon warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 22h14M5 2h14M17 22v-4.17a2 2 0 0 0-.59-1.42L12 12l-4.41 4.41A2 2 0 0 0 7 17.83V22M7 2v4.17a2 2 0 0 0 .59 1.42L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2"/></svg></div>
+            <h4 id="earlyExitPromptTitle" class="dialog-title">Debito orario rilevato</h4>
+            <p class="text-secondary mt-2">Mancano <strong id="promptMinutesToCover" class="text-yellow-600 num" style="font-size:1.1rem;">0</strong> minuti per completare le 8 ore.</p>
+            <p class="hint mt-1 mb-4">Vuoi coprire questo tempo o lasciarlo da recuperare più avanti?</p>
+            <div class="chip-grid" style="grid-template-columns: 1fr 1fr; gap:.5rem;">
+                <button type="button" class="chip" style="min-height:42px;" id="promptBtnFerie"><span class="legend-item" style="--c: var(--t-ferie)"><i></i></span>Ferie a ore</button>
+                <button type="button" class="chip" style="min-height:42px;" id="promptBtnPar"><span class="legend-item" style="--c: var(--t-par)"><i></i></span>PAR a ore</button>
+                <button type="button" class="chip" style="min-height:42px;" id="promptBtnPermesso"><span class="legend-item" style="--c: var(--info)"><i></i></span>Permesso ROL</button>
+                <button type="button" class="chip" style="min-height:42px;" id="promptBtnTrasferta"><span class="legend-item" style="--c: var(--t-trasferta)"><i></i></span>Trasferta</button>
+                <button type="button" class="chip" style="min-height:42px;" id="promptBtnVisita"><span class="legend-item" style="--c: var(--t-infortunio)"><i></i></span>Visita medica</button>
+                <button type="button" class="chip" style="min-height:42px;" id="promptBtnMalattia"><span class="legend-item" style="--c: var(--t-malattia)"><i></i></span>Malattia (giorno)</button>
+            </div>
+            <button type="button" id="promptBtnDebito" class="btn btn-ghost btn-block mt-3">Registra come da recuperare entro il mese</button>
+        </div>
+    </div>
+
+    <!-- ================= IMPORT IMMAGINE ================= -->
+    <div id="imageImportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="imageImportTitle">
+        <div class="modal-content" tabindex="-1">
+            <div class="dialog-head">
+                <div>
+                    <h4 id="imageImportTitle" class="dialog-title">Importa da immagine</h4>
+                    <p class="dialog-sub">I dati estratti sono una bozza: verificali giorno per giorno.</p>
+                </div>
+                <button type="button" id="closeImageModalBtn" class="icon-button" aria-label="Chiudi importazione"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div id="imageImportFeedback" class="hidden p-3 text-center mb-4 text-sm" role="status" aria-live="polite"></div>
+            <div class="image-frame">
+                <img id="imagePreview" src="" alt="Anteprima dell'immagine selezionata">
+            </div>
+            <label class="check-row mb-4" style="text-align:left;">
+                <input id="aiPrivacyConsent" type="checkbox">
+                <span><strong>Consenso all’invio</strong><small>Confermo di essere autorizzato a inviare questa immagine al servizio AI configurato e di aver oscurato i dati personali non necessari.</small></span>
+            </label>
+            <div id="imageProcessingLoader" class="loader hidden"></div>
+            <button type="button" id="processImageBtn" class="btn btn-primary btn-lg btn-block" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="M19 3v4M17 5h4"/></svg>Elabora e importa</button>
+        </div>
+    </div>
+
+    <!-- ================= RIEPILOGO ================= -->
+    <div id="summaryReportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="summaryReportTitle">
+        <div class="modal-content wide" tabindex="-1">
+            <div class="dialog-head">
+                <div>
+                    <h4 id="summaryReportTitle" class="dialog-title">Riepilogo mensile</h4>
+                    <p class="dialog-sub">Controlla i totali prima di esportare.</p>
+                </div>
+                <button type="button" id="closeReportModalBtn" class="icon-button" aria-label="Chiudi riepilogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div id="reportContent"></div>
+            <div class="dialog-foot">
+                <button type="button" id="downloadReportBtn" class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Scarica CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logica: motore di calcolo testato, moduli di supporto, interfaccia -->
+    <script src="js/engine.js"></script>
+    <script src="js/holidays.js"></script>
+    <script src="js/backup.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/ui-extras.js"></script>
+</body>
+</html>
