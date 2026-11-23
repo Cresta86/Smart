@@ -1,9 +1,0 @@
-{
-  "name": "timbrature-portale-orari",
-  "version": "2026.11.23.5",
-  "private": true,
-  "description": "Strumento personale per timbrature, assenze e recuperi. Sito statico senza dipendenze.",
-  "scripts": {
-    "test": "node --test"
-  }
-}
